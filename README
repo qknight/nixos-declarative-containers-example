@@ -1,0 +1,34 @@
+this is the documentation to a talk given at the easterhegg:
+
+  http://lastlog.de/misc/easterhegg2014-docker-nix-container.svg
+
+and
+
+  https://eh14.easterhegg.eu/pages/fahrplan/events/5752/
+
+# summary 
+
+lecture: Deklarativ Webservices unter NixOS beschreiben
+Wie man LXC, virtualisierung und reverse proxies deklarativ einsetzt um Webservices zu hosten!
+
+
+vhosts einrichten und manuelles aufsetzen von webservices wie z.b. mediawiki ist von gestern! mit NixOS kann man LXC, virtualisierung und reverse proxies deklarativ einsetzen um auf einfache art einen komplexen webservice aufzusetzen.
+
+# worum geht es hier?
+welcher administrator verwendet nicht gerne technologien wie docker um webservices zu entwickeln oder ad-hoc aufzusetzen. docker setzt dabei auf gänige linux distributionen auf und verwaltet programme wie mysql, apache und php scripte.
+
+docker hat aber auch einige nachteile: 
+- wenn man n mal den selben webservice aufsetzt, dann hat man die n-fache menge an programmdaten 
+- die ganze konfiguration ist stateful 
+- docker integriert nicht in die unterliegende paketverwaltung
+
+# warum NixOS und nicht docker nehmen? 
+in diesem talk wird ausführlich beschreiben wie man mittels Nix/NixOS bordmitteln komfortabel webservices beschreibt und dann in virtuellen umgebungen instanziiert.
+
+die idee wird hier etwas näher beschrieben: 
+http://blog.lastlog.de/posts/advanced_webservices_on_nixos/
+
+der vortrag richtet sich an leute, die schon etwas grundkenntnisse in sachen NixOS und webservices haben.
+
+bei fragen und anregungen gerne via email: 
+js@lastlog.de
