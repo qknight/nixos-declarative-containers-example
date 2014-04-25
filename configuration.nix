@@ -43,7 +43,7 @@
       allowedTCPPorts = [ 22 80 443 ];
     };
     extraHosts = ''
-      192.168.56.102 easterhegg14 mediawiki webservice0 webservice1 webservice2 webservice3 webservice4
+      192.168.56.102 easterhegg14 mediawiki webservice0 webservice1 webservice2 webservice3 webservice4 
     '';
   };
 
@@ -99,16 +99,25 @@
   # journalctl status httpd.service
   # journalctl -b -u httpd
 
-  services.mysql = { 
-    enable = true;
-    package = pkgs.mysql;
-    rootPassword = "foobar";
-  };
-
-  #services.postgresql = {
-  #  enable=true;
-  #  package = pkgs.postgresql90;
+  #services.mysql = { 
+  #  enable = true;
+  #  package = pkgs.mysql;
+  #  rootPassword = "foobar";
   #};
+
+  services.postgresql = {
+    enable=true;
+    package = pkgs.postgresql90;
+    #authentication = "local all all trust";
+    authentication = pkgs.lib.mkOverride 10 ''
+      local mediawiki all ident map=mwusers
+      local all       all ident
+    '';
+    identMap = ''
+      mwusers root   mediawiki
+      mwusers wwwrun mediawiki
+    '';
+  };
 
   services.httpd = {
     enable = true;
@@ -141,7 +150,6 @@
       # webservice1 vhost
       {
         # broken: this does not work as the database has wrong credentials (at least on this system)
-        #hostName = "webservice1";
         serverAliases = ["webservice1"];
 
         extraConfig = ''
@@ -152,10 +160,7 @@
         [
           {
             serviceType = "mediawiki";
-            siteName = "wiki2";
-            dbType="mysql";
-            dbUser="root";
-            dbPassword="foobar";
+            siteName = "wiki9";
           }
         ];
       }
@@ -183,7 +188,7 @@
           ProxyPassReverse / http://192.168.99.11:80/
         '';
       }
-      # webservice3 vhost
+      ## webservice3 vhost
       { 
         hostName = "webservice3";
         serverAliases = ["webservice3"];
@@ -207,7 +212,7 @@
           ProxyPassReverse / http://192.168.100.11:80/
         '';
       }
-      # webservice4 vhost
+      ## webservice4 vhost
       { 
         hostName = "webservice4";
         serverAliases = ["webservice4"];
@@ -289,14 +294,21 @@
     localAddress = "192.168.101.11";
     
     config = { config, pkgs, ... }: { 
-      services.mysql = { 
-        enable = true;
-        package = pkgs.mysql;
-        rootPassword = "foobar";
-      };
       networking.firewall = {
         enable = true;
         allowedTCPPorts = [ 80 443 ];
+      };
+      services.postgresql = {
+        enable=true;
+        package = pkgs.postgresql92;
+        authentication = pkgs.lib.mkOverride 10 ''
+          local mediawiki all ident map=mwusers
+          local all all ident
+        '';
+        identMap = ''
+          mwusers root   mediawiki
+          mwusers wwwrun mediawiki
+        '';
       };
       services.httpd = {
         enable = true;
@@ -309,8 +321,8 @@
           # wiki.invalidmagic.de
           {
             # Note: do not forget to add a DNS entry for wiki.lastlog.de at hetzner dns settings if needed
-            hostName = "wiki.invalidmagic.de";
-            serverAliases = ["wiki.invalidmagic.de"];
+            #hostName = "wiki.invalidmagic.de";
+            serverAliases = ["mywiki"];
 
             extraConfig = ''
               RedirectMatch ^/$ /wiki
@@ -320,9 +332,6 @@
               {
                 serviceType = "mediawiki";
                 siteName = "mywiki";
-                dbType="mysql";
-                dbUser="root";
-                dbPassword="foobar";
               }
             ];
           }
