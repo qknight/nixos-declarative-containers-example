@@ -43,7 +43,7 @@
       allowedTCPPorts = [ 22 80 443 ];
     };
     extraHosts = ''
-      192.168.56.102 easterhegg14 mediawiki webservice0 webservice1 webservice2 webservice3 webservice4 webservice5
+      192.168.56.102 webservice0 webservice1 webservice2 webservice3 webservice4 webservice5
     '';
   };
 
@@ -70,41 +70,24 @@
   # Enable the OpenSSH daemon.
   services.openssh.enable = true;
 
-  # we override the php version for all uses of pkgs.php with this
-  #nixpkgs.config.packageOverrides = pkgs : rec {
-  #  # nix-env -qa --xml | grep php
-  #  php = pkgs.php53;
-  #};
-
+  # SECURITY WARNING SECURITY WARNING SECURITY WARNING
+  #
+  # do not use this in production, nixos-containers are not meant for that !!!
+  #
+  # SECURITY WARNING SECURITY WARNING SECURITY WARNING
+  
   # for debugging use:
   #   journalctl status httpd.service
   #   journalctl -b -u httpd
-  # and do not forget to start the containers manually (even the declarative containers)
-
-  # index.php should contain:
-  #  <?php phpinfo(); ?>
-
-  #services.mysql = { 
-  #  enable = true;
-  #  package = pkgs.mysql;
-  #  rootPassword = "foobar";
-  #};
-
-  services.postgresql = {
-    enable=true;
-    package = pkgs.postgresql90;
-    #authentication = "local all all trust";
-    authentication = pkgs.lib.mkOverride 10 ''
-      local mediawiki all ident map=mwusers
-      local all       all ident
-    '';
-    identMap = ''
-      mwusers root   mediawiki
-      mwusers wwwrun mediawiki
-    '';
-  };
-
   
+  # and do not forget to start the containers manually (even the declarative containers)
+  #
+  # once you did nixos-rebuild switch; 
+  # for i in `seq 1 5`; do nixos-confainter start web$i; done
+  # for i in `seq 1 5`; do mkdir -p /var/lib/containers/web$i/webroot/; done
+  # for i in `seq 1 5`; do echo "<?php phpinfo(); ?>" > /var/lib/containers/web$i/webroot/index.php; done
+  # for i in `seq 1 5`; do echo "hello world from web$i" > /var/lib/containers/web$i/webroot/index.html; done
+
   services.httpd = {
     enable = true;
     enableSSL = false;
@@ -112,8 +95,8 @@
     virtualHosts =
     [ 
       # webservice0 vhost
+      # index.html works, browsing to index.php shows that php is not enabled
       { 
-        #hostName = "webservice0";
         serverAliases = ["webservice0"];
         documentRoot = "/webroot/";
         extraConfig = ''
@@ -138,12 +121,9 @@
           ProxyRequests off
 
           # User-Agent / browser identification is used from the original client
-          # shinken will then return either the mobile or desktop version of the webpage!
           ProxyVia Off
           ProxyPreserveHost On 
 
-          # since on ubuntu it is disabled by default, we have to reenable it here
-          # i don't want to touch /etc/apache2/mods-enabled/proxy.conf
           <Proxy *>
           Order deny,allow
           Allow from all
@@ -162,12 +142,9 @@
           ProxyRequests off
 
           # User-Agent / browser identification is used from the original client
-          # shinken will then return either the mobile or desktop version of the webpage!
           ProxyVia Off
           ProxyPreserveHost On 
 
-          # since on ubuntu it is disabled by default, we have to reenable it here
-          # i don't want to touch /etc/apache2/mods-enabled/proxy.conf
           <Proxy *>
           Order deny,allow
           Allow from all
@@ -186,12 +163,9 @@
           ProxyRequests off
 
           # User-Agent / browser identification is used from the original client
-          # shinken will then return either the mobile or desktop version of the webpage!
           ProxyVia Off
           ProxyPreserveHost On 
 
-          # since on ubuntu it is disabled by default, we have to reenable it here
-          # i don't want to touch /etc/apache2/mods-enabled/proxy.conf
           <Proxy *>
           Order deny,allow
           Allow from all
@@ -210,12 +184,9 @@
           ProxyRequests off
 
           # User-Agent / browser identification is used from the original client
-          # shinken will then return either the mobile or desktop version of the webpage!
           ProxyVia Off
           ProxyPreserveHost On 
 
-          # since on ubuntu it is disabled by default, we have to reenable it here
-          # i don't want to touch /etc/apache2/mods-enabled/proxy.conf
           <Proxy *>
           Order deny,allow
           Allow from all
@@ -234,12 +205,9 @@
           ProxyRequests off
 
           # User-Agent / browser identification is used from the original client
-          # shinken will then return either the mobile or desktop version of the webpage!
           ProxyVia Off
           ProxyPreserveHost On 
 
-          # since on ubuntu it is disabled by default, we have to reenable it here
-          # i don't want to touch /etc/apache2/mods-enabled/proxy.conf
           <Proxy *>
           Order deny,allow
           Allow from all
@@ -249,7 +217,6 @@
           ProxyPassReverse / http://192.168.105.11:80/
         '';
       }
-
 
     ];
   };
@@ -267,8 +234,11 @@
       services.httpd = {
         enable = true;
         enableSSL = false;
-        adminAddr = "web2@example.org";
+        adminAddr = "web1@example.org";
         documentRoot = "/webroot";
+        # we override the php version for all uses of pkgs.php with this, 
+        #  nix-env -qa --xml | grep php
+        # lists available versions of php
         extraModules = [
           { name = "php5"; path = "${pkgs.php}/modules/libphp5.so"; }
         ];
